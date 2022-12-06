@@ -1,5 +1,5 @@
 # $ d_\parallel $ par_estimation
-
+$$ x = 2$$
 ## Generating training data
 
 To generate data for the artificial neural network run: 
