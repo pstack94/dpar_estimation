@@ -1,4 +1,4 @@
-# $d_\parallel$par_estimation
+# $ d_\parallel $ par_estimation
 
 ## Generating training data
 
