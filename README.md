@@ -1,5 +1,9 @@
 # dpar_estimation
 
+To generate data for the artificial neural network run: 
+
+python create_data.py dp_min dp_max dfree bvalfilename bvecfile name f_out shells snr
+
 
 
 
