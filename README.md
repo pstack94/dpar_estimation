@@ -1,5 +1,7 @@
 # dpar_estimation
 
+## Generating training data
+
 To generate data for the artificial neural network run: 
 
 python create_data.py dp_min dp_max dfree bvalfilename bvecfile name f_out shells snr
@@ -14,6 +16,9 @@ were:
 *shells shells of the pretocol i.e 0 500 1500 
 *snr snr of the training data i.e 22
 
-Then upload the file data.zip to your google drive and run the following googlecolab to train the ANN: [GoogleColab Notebook to train ANN](https://colab.research.google.com/drive/1HV0k8xS-tnIDxbd4ag34kqv4M6i5bTnG?usp=sharing).
+Then upload the file data.zip to your google drive. 
+
+## Training the ANN
+Run the following googlecolab to train the ANN: [GoogleColab Notebook to train ANN](https://colab.research.google.com/drive/1HV0k8xS-tnIDxbd4ag34kqv4M6i5bTnG?usp=sharing).
 
 save the .h5 file in your computer. 
