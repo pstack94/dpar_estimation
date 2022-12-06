@@ -12,7 +12,7 @@ were:
 * *dfree* is de free water difusivity  i.e 1.44e-3
 * *bvalfilename* path an name of the bval file i.e path/file.bval
 * *bvecfilename* path an name of the bvec file i.e path/file.bvec
-* *f_out path* where the data is going to be stored i.e outputpath/
+* *f_out* is the path where the data is going to be stored i.e outputpath/
 * *shells* shells of the pretocol i.e 0 500 1500 
 * *snr* snr of the training data i.e 22
 
