@@ -42,3 +42,18 @@ python estimate_csf_dpar_iasf.py dwi ROI model dp_min dp_max dfree bvalfilename 
 Usage example: 
 
 python estimate_csf_dpar_iasf.py path/dwi.nii path/ROI.nii /path/model_csf_dot10.h5 0.6e-3 1.6e-3 1.9e-3 path/file.bval path/file.bvec  0 500 2000 4500 6000 8000 26 -type_search fixed -iasf 0.675
+
+
+## Dependencies 
+You have to install the following python libraries: 
+* numpy
+* nibabel
+* tensorflow
+* scipy
+* dipy
+* itertools
+* random 
+* shutil 
+* tensorflow
+
+
