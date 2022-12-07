@@ -13,8 +13,8 @@ were:
 * *bvalfilename* path an name of the bval file i.e path/file.bval
 * *bvecfilename* path an name of the bvec file i.e path/file.bvec
 * *f_out* is the path where the data is going to be stored i.e outputpath/
-* *shells* shells of the pretocol i.e 0 500 1500 
-* *snr* snr of the training data i.e 22
+* *shells* shells of the pretocol i.e 0 500 2000 4500 6000 8000
+* *snr* snr of the training data i.e 26
 
 Usage example: 
 python create_data.py 0.6e-3 1.6e-3 1.9e-3 path/file.bval path/file.bvec  path/out 0 500 2000 4500 6000 8000 26
