@@ -7,9 +7,9 @@ To generate data for the artificial neural network run:
 python create_data.py dp_min dp_max dfree bvalfilename bvecfilename f_out shells snr
 
 were: 
-* *dp_min* is de minimum parallel difusivity i.e 0.6e-3
-* *dp_max* is de maximum parallel difusivity i.e 1.6e-3
-* *dfree* is de free water difusivity  i.e 1.9e-3
+* *dp_min* is the minimum parallel difusivity i.e 0.6e-3
+* *dp_max* is the maximum parallel difusivity i.e 1.6e-3
+* *dfree* is the free water difusivity  i.e 1.9e-3
 * *bvalfilename* path an name of the bval file i.e path/file.bval
 * *bvecfilename* path an name of the bvec file i.e path/file.bvec
 * *f_out* is the path where the data is going to be stored i.e outputpath/
@@ -30,6 +30,11 @@ save the .h5 file in your computer.
 For the free search, run: 
 
 python estimate_csf_dpar_iasf.py dwi ROI model dp_min dp_max dfree bvalfilename bvecfilename  shells snr -type_search free
+
+
+were: 
+* *ROI* is the Region Of Interest 
+* *model* is the ANN model (.h5 file) obtained with googlecolab
 
 usage example: 
 python estimate_csf_dpar_iasf.py path/dwi.nii path/ROI.nii /path/model_csf_dot10.h5 0.6e-3 1.6e-3 1.9e-3 path/file.bval path/file.bvec  0 500 2000 4500 6000 8000 26 -type_search free
