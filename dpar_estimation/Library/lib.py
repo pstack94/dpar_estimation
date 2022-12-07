@@ -17,6 +17,10 @@ from scipy.special import erf
 from scipy.stats import truncnorm
 from matplotlib import pyplot
 import shutil
+from tensorflow import keras
+from itertools import permutations
+from scipy.special import erf
+
 
 def open_vol(name):
     img= nib.load(name)
@@ -148,8 +152,8 @@ def genera_fantasma(dp_min, dp_max, dfree, n_bvals, n_bvecs, v):
 
 def data_phantom(dp_min, dp_max, dfree, n_bvals, n_bvecs, v, snr, f_out):
     snr_str = str(snr)
-    dir_SMT = f_out+'/SMT_dpar_noise_'    + snr_str
-    dir_LBL = f_out+'/Labels_dpar_noise_' + snr_str
+    dir_SMT = f_out+'/SMT_dpar_noise'
+    dir_LBL = f_out+'/Labels_dpar_noise'
 
     if not os.path.exists(dir_SMT):
         os.makedirs(dir_SMT)
@@ -186,17 +190,130 @@ def data_phantom(dp_min, dp_max, dfree, n_bvals, n_bvecs, v, snr, f_out):
     shutil.rmtree(dir_SMT)
     shutil.rmtree(dir_LBL)
 
+def generate_signal_ball(coef_agua, bvals, bvecs):
+    gtab = gradient_table(bvals, bvecs)
+    evals_bola = np.array([coef_agua,coef_agua,coef_agua])
+    evecs=np.array([[1,0,0],[0,1,0],[0,0,1]])
+    CSF = single_tensor(gtab, S0=1, evals=evals_bola, evecs=evecs, snr=None)
+    return CSF.reshape(1,-1)
 
-# parser = argparse.ArgumentParser(description='This function creates training data for the ANN')
-# parser.add_argument('dp_min', type = float, help = 'minimum parallel difusivity i.e 0.5e-3')
-# parser.add_argument('dp_max', type = float, help = 'maximum parallel difusivity i.e 1e-3')
-# parser.add_argument('dfree', type = float, help = 'free water difusivity i.e 1.44e-3')
-# parser.add_argument('bvalfilename', nargs='?', help = 'path and name of the bvals')
-# parser.add_argument('bvecfilename', nargs='?', help = 'path and name of the bvecs')
-# parser.add_argument('f_out', nargs='?', help = 'path where the output is going to be stored')
-# parser.add_argument('-shells',nargs="+", type=int, help = 'type the protocol shells ie. -shells 0 500 2000 4500 6000 8000')
-# parser.add_argument('-snr', type=int, default = 22, help = 'type the snr i.e: 22')
-#
-# args = parser.parse_args()
-#
-# data_phantom(args.dp_min, args.dp_max, args.dfree, args.bvalfilename, args.bvecfilename, args.shells, args.snr, args.f_out)
+def base_SMT_csf_noisy(snr,bvals, bvecs,N, diff_free):
+    smt_csf_noisy = 0
+    for i in range(N):
+        s_csf = generate_signal_ball(diff_free, bvals, bvecs)
+        s_noisy = add_noise(s_csf, snr, S0=1, noise_type='rician')
+        smt_csf_noisy +=  calc_SMT_matrix(bvals, s_noisy)
+
+    smt_csf_noisy/=N
+
+    return smt_csf_noisy
+
+
+
+def SMT_teorica(icsf_wm, dpar_wm, b):
+    smt_wm = np.zeros(b.shape[0] + 1)
+    dext_wm = dpar_wm*(1-icsf_wm)
+
+    eb_int_wm =np.sqrt(np.pi)*erf(np.sqrt(b*dpar_wm))/(2*np.sqrt(b*dpar_wm))
+    eb_ext_wm = np.exp(-b*dext_wm) * np.sqrt(np.pi)*erf(np.sqrt(b*(dpar_wm - dext_wm)))/(2*np.sqrt(b*(dpar_wm - dext_wm)))
+    eb_wm = icsf_wm*eb_int_wm + (1-icsf_wm)*eb_ext_wm
+
+
+    smt_wm[0] = 1
+    smt_wm[1:] = eb_wm
+
+    return smt_wm
+#function that estimates dpar with fixed search
+
+def SMT_to_WMparams_fix(V, icsf_wm,model_csf,bvals,bvecs, snr, dpar_min, dpar_max, diff_free):
+    b = np.unique(bvals)
+    dpars = np.arange(dpar_min, dpar_max,0.005e-3)
+    dpars = np.random.permutation(dpars)
+    error_min = 1e9
+    h_dot = 0.1
+    N = 100
+    smt_csf_noisy = base_SMT_csf_noisy(snr,bvals, bvecs,N,diff_free)
+
+
+    b_wm = np.mean(V, axis=0)
+    h_csf = np.mean(model_csf.predict(V))
+    h_wm = 1 - h_csf - h_dot
+
+    for dpar in dpars:
+
+        smt_wm = SMT_teorica(icsf_wm, dpar, b[1:])
+
+        base_prop = h_wm*smt_wm + h_csf*smt_csf_noisy + h_dot
+
+        error = np.linalg.norm(b_wm - base_prop)
+
+        if error< error_min:
+            error_min = error
+            base_f = base_prop
+            h_wmff = h_wm
+            h_csff = h_csf
+            h_dotf = h_dot
+            icsff = icsf_wm
+            dparf = dpar
+    return icsff, dparf, h_wmff, h_csff
+
+#function that estimates dpar with fixed search
+def SMT_to_WMparams3(V, model_csf,bvals,bvecs, snr,  dpar_min, dpar_max, diff_free):
+
+    b = np.unique(bvals)
+
+    dpars = np.arange(dpar_min, dpar_max, 0.005e-3)
+    dpars = np.random.permutation(dpars)
+
+    icsfs = np.arange(0.3,1.0,0.01)
+    icsfs = np.random.permutation(icsfs)
+
+    error_min = 1e9
+
+    h_dot = 0.1
+
+    N = 100
+    smt_csf_noisy = base_SMT_csf_noisy(snr,bvals, bvecs,N,diff_free)
+
+
+    b_wm = np.mean(V, axis=0)
+    h_csf = np.mean(model_csf.predict(V))
+
+    for dpar in dpars:
+        for icsf_wm in icsfs:
+            h_wm = 1 - h_csf - h_dot
+            if h_csf < 0 or h_csf > 1:
+                continue
+            smt_wm = SMT_teorica(icsf_wm, dpar, b[1:])
+
+            base_prop = h_wm*smt_wm + h_csf*smt_csf_noisy + h_dot
+            error = np.linalg.norm(b_wm - base_prop)
+            if error< error_min:
+                    error_min = error
+                    base_f = base_prop
+                    h_wmff = h_wm
+                    h_csff = h_csf
+                    h_dotf = h_dot
+                    icsff = icsf_wm
+                    dpar_f = dpar
+    return icsff, dpar_f, h_wmff, h_csff
+
+def SMT_to_icsf_dpar_fixed_noisy_csf(b_wm, snr, H_csf, bvals, bvecs, dpar, dcsf):
+    icsfs = np.arange(0.01,1.05,0.01) #es buen idea aumentar la resolucion
+    min_error = 1e9
+    b = np.unique(bvals)
+    smt_csf = base_SMT_csf_noisy(snr,bvals, bvecs,100,dcsf)
+
+    for icsf_wm in icsfs:
+        smt_wm = SMT_teorica(icsf_wm, dpar, b[1:])
+
+        h_wm = 1 - H_csf -0.1
+        base_prop = h_wm*smt_wm + H_csf*smt_csf +0.1
+
+        error = np.mean(np.abs(b_wm.reshape(-1,1) -base_prop.reshape(-1,1)))
+
+        if error < min_error:
+            min_error = error
+            base_final = smt_wm
+            icsf_final = icsf_wm
+    return icsf_final
