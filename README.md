@@ -1,5 +1,5 @@
-# $$ d_\parallel $$ par_estimation
-$$ x = 2$$
+# Parallel difusivity estimation
+
 ## Generating training data
 
 To generate data for the artificial neural network run: 
