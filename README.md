@@ -27,5 +27,18 @@ Run the following googlecolab to train the ANN: [GoogleColab Notebook to train A
 save the .h5 file in your computer. 
 
 ## Estimate free water compartment, parallel difusivity and voxel to voxel IASF
-run: 
-python estimate_csf_dpar_iasf.py path/dwi.nii path/ROI.nii /path/model_csf_dot10.h5 dp_min dp_max dfree path/file.bval path/file.bvec  0 500 2000 4500 6000 8000 26 -type_search fixed -iasf 0.675
+For the free search, run: 
+
+python estimate_csf_dpar_iasf.py dwi ROI model dp_min dp_max dfree bvalfilename bvecfilename  shells snr -type_search free
+
+usage example: 
+python estimate_csf_dpar_iasf.py path/dwi.nii path/ROI.nii /path/model_csf_dot10.h5 0.6e-3 1.6e-3 1.9e-3 path/file.bval path/file.bvec  0 500 2000 4500 6000 8000 26 -type_search free
+
+For the fixed search, run: 
+
+python estimate_csf_dpar_iasf.py dwi ROI model dp_min dp_max dfree bvalfilename bvecfilename  shells snr -type_search fixed -iasf iasf_value
+
+
+Usage example: 
+
+python estimate_csf_dpar_iasf.py path/dwi.nii path/ROI.nii /path/model_csf_dot10.h5 0.6e-3 1.6e-3 1.9e-3 path/file.bval path/file.bvec  0 500 2000 4500 6000 8000 26 -type_search fixed -iasf 0.675
